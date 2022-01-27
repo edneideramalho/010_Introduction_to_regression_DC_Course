@@ -1,3 +1,3 @@
 # Introduction to Regression
 
-This material is part of a course taken at DataCamp.
+This material is part of a course took at DataCamp.
