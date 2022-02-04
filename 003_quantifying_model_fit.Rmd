@@ -374,7 +374,7 @@ autoplot(mdl_price_vs_conv,
          ncol = 1)
 ```
 
-# Outliers, leverage, and influence 
+# Outliers, leverage, and influence
 
 ```{r}
 glimpse(fish)
@@ -387,7 +387,216 @@ glimpse(roach)
 ```
 
 ```{r}
+rownames(roach) <- 1:nrow(roach)
+```
+
+```{r}
 ggplot(roach, aes(length_cm, mass_g)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE)
+```
+
+## Extreme explanatory values
+
+```{r}
+roach %>% 
+  dplyr::mutate(
+    has_extreme_length = length_cm < 15 | length_cm > 26
+  ) %>% 
+  ggplot(aes(length_cm, mass_g)) +
+  geom_point(aes(color = has_extreme_length)) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+## Response values away from the regression line
+
+```{r}
+roach %>% 
+  dplyr::mutate(
+    has_extreme_length = length_cm < 15 | length_cm > 26,
+    has_extreme_mass = mass_g < 1
+  ) %>% 
+  ggplot(aes(length_cm, mass_g)) +
+  geom_point(aes(color = has_extreme_length,
+                 shape = has_extreme_mass)) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+## Leverage
+
+*Leverege* is a measure of how extreme the explanatory variable values are.
+
+(**pt.** Alavanca)
+
+```{r}
+mdl_roach <- lm(mass_g ~ length_cm, data = roach)
+
+hatvalues(mdl_roach)
+```
+
+## The `.hat` column from `broom`
+
+```{r}
+library(broom)
+augment(mdl_roach)
+```
+
+## Highly leveraged roaches
+
+```{r}
+mdl_roach %>% 
+  augment() %>% 
+  select(mass_g, length_cm, leverage = .hat) %>% 
+  arrange(desc(leverage)) %>% 
+  head()
+```
+
+-   The first two observations are from a really long roach, and a really short roach, respectively.
+
+## Influence
+
+-   *Influence* measures how much the model would change if you left the observation out of the dataset when modeling.
+
+-   **Cook's distance** is the most common measure of influence.
+
+```{r}
+cooks.distance(mdl_roach)
+```
+
+-   In the `broom` library, we can find the cook's distance on the `cooksd` column:
+
+```{r}
+library(broom)
+augment(mdl_roach)
+```
+
+## Most influential roaches
+
+```{r}
+mdl_roach %>% 
+  augment() %>% 
+  dplyr::select(mass_g, length_cm, cooks_dist = .cooksd) %>% 
+  dplyr::arrange(desc(cooks_dist)) %>% 
+  head()
+```
+
+-   The three first observations show the more influential roaches
+
+    -   1: a really short roach
+
+    -   2: a really long roach
+
+    -   3: a zero mass roach (impossible)
+
+## Removing the most influential roach
+
+```{r}
+roach_not_short <- roach %>% 
+  dplyr::filter(length_cm != 12.9)
+```
+
+```{r}
+ggplot(roach, aes(length_cm, mass_g)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_smooth(method = "lm", se = FALSE, data = roach_not_short,
+              color = "red")
+```
+
+## `autoplot()`
+
+```{r}
+autoplot(
+  mdl_roach,
+  which = 4:6,
+  nrow = 3,
+  ncol = 1
+)
+```
+
+## Exercises
+
+#### **Leverage**
+
+Leverage measures how unusual or extreme the explanatory variables are for each observation. Very roughly, a high leverage means that the explanatory variable has values that are different to other points in the dataset. In the case of simple linear regression, where there is only one explanatory value, this typically means values with a very high or very low explanatory value.
+
+Here, you'll look at highly leveraged values in the model of house price versus the square root of distance from the nearest MRT station in the Taiwan real estate dataset.
+
+Guess which observations you think will have a high leverage, then move the slider to find out.
+
+Which statement is true?
+
+a) Observations with a large distance to the nearest MRT station have the highest leverage, because these points are furthest away from the linear regression trend line.
+
+b) Observations with a large distance to the nearest MRT station have the highest leverage, because leverage is proportional to the explanatory variable.
+
+**c) Observations with a large distance to the nearest MRT station have the highest leverage, because most of the observations have a short distance, so long distances are more extreme.**
+
+d) Observations with a high price have the highest leverage, because most of the observations have a low price, so high prices are most extreme.
+
+#### **Influence**
+
+*Influence* measures how much a model would change if each observation was left out of the model calculations, one at a time. That is, it measures how different the prediction line would look if you ran a linear regression on all data points except that point, compared to running a linear regression on the whole dataset.
+
+The standard metric for influence is *Cook's distance*, which calculates influence based on the size of the residual and the leverage of the point.
+
+Here you can see the same model as last time: house price versus the square root of distance from the nearest MRT station in the Taiwan real estate dataset.
+
+Guess which observations you think will have a high influence, then move the slider to find out.
+
+Which statement is true?
+
+-   **Observations with predictions far away from the trend line have high influence, because they have large residuals and are far away from other observations.**
+
+-   Observations with high prices have high influence, because influence is proportional to the response variable.
+
+-   Observations with predictions far away from the trend line have high influence, because the slope of the trend is negative.
+
+-   Observations with predictions far away from the trend line have high influence, because that increases the leverage of those points.
+
+### **Extracting leverage and influence**
+
+In the last few exercises you explored which observations had the highest leverage and influence. Now you'll extract those values from an augmented version of the model, and visualize them.
+
+`mdl_price_vs_dist` is available. `dplyr`, `ggplot2` and `ggfortify` are loaded.
+
+```{r}
+mdl_price_vs_dist <- lm(price_twd_msq ~ sqrt(dist_to_mrt_m),
+                        data = taiwan_real_estate)
+mdl_price_vs_dist
+```
+
+-   Augment `mdl_price_vs_dist`, then arrange observations by descending influence (`.hat`), and get the head of the results.
+
+```{r}
+mdl_price_vs_dist %>% 
+  # Augment the model
+  augment() %>% 
+  # Arrange rows by descending leverage
+  arrange(desc(.hat)) %>% 
+  # Get the head of the dataset
+  head()
+```
+
+-   Augment `mdl_price_vs_dist`, then arrange observations by descending influence (`.cooksd`), and get the head of the results.
+
+```{r}
+mdl_price_vs_dist %>% 
+  # Augment the model
+  augment() %>% 
+  # Arrange rows by descending Cook's distance
+  arrange(desc(.cooksd)) %>% 
+  # Get the head of the dataset
+  head()
+```
+
+-   Plot the three outlier diagnostic plots (numbered `4` to `6`) for `mdl_price_vs_dist`. Use a layout of three rows and one column.
+
+```{r}
+autoplot(
+  mdl_price_vs_dist,
+  which = 4:6,
+  nrow = 3,
+  ncol = 1
+)
 ```
