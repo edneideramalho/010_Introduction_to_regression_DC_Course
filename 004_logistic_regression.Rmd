@@ -1,0 +1,135 @@
+---
+title: "Logistic Regression"
+author: "Edneide Ramalho"
+date: "`r format(Sys.time(), '%d de %B de %Y')`"
+output: 
+    html_document:
+      highlight: textmate
+      logo: logo.png
+      theme: cerulean
+      number_sections: yes
+      toc: yes
+      toc_float:
+        collapsed: yes
+        smooth_scroll: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Why you need logistic regression
+
+-   When you have dichotomous variables, you can not use linear regression.
+
+## Churn data
+
+```{r}
+library(fst) # to read fst format
+library(tidyverse)
+
+# data
+churn <- read_fst(
+  "churn.fst",
+  columns = NULL,
+  from = 1,
+  to = NULL,
+  as.data.table = FALSE,
+  old_format = FALSE
+)
+```
+
+## Linear model
+
+```{r}
+mdl_churn_vs_recency_lm <- lm(has_churned ~ time_since_last_purchase, data = churn)
+mdl_churn_vs_recency_lm
+```
+
+```{r}
+coeffs <- coefficients(mdl_churn_vs_recency_lm)
+intercept <- coeffs[1]
+slope <- coeffs[2]
+```
+
+## Visualizing the linear model
+
+```{r}
+lm_plot <- ggplot(
+  churn,
+  aes(time_since_last_purchase, has_churned)
+) +
+  geom_point() +
+  geom_abline(intercept = intercept,
+              slope = slope)
+lm_plot
+```
+
+## Zooming out
+
+```{r}
+lm_plot +
+  xlim(-10, 10) +
+  ylim(-0.2, 1.2)
+```
+
+## What is logistic regression?
+
+-   Another type of generalized linear model.
+
+-   Used when the response variable is logical.
+
+-   The responses follow logistic (S-shaped) curve.
+
+## Visualizing  the logistic model
+
+```{r}
+glm_plot <- lm_plot +
+  geom_smooth(
+    method = "glm",
+    se = FALSE,
+    method.args = list(family = binomial)
+  ) 
+glm_plot
+```
+
+```{r}
+glm_plot +
+  xlim(-20, 20) +
+  ylim(0, 1)
+```
+
+## Exercises
+
+### Exploring the explanatory variables
+
+When the response variable is logical, all the points lie on the y equals zero and y equals one lines, making it difficult to see what is happening. In the video, until you saw the trend line, it wasn't clear how the explanatory variable was distributed on each line. This can be solved with a histogram of the explanatory variable, faceted on the response.
+
+You will use these histograms to get to know the financial services churn dataset seen in the video.
+
+`churn` is available and `ggplot2` is loaded.
+
+-   Using `churn`, plot `time_since_last_purchase` as a histogram with binwidth `0.25` faceted in a grid with `has_churned` on each row.
+
+```{r}
+ggplot(data = churn, aes(x = time_since_last_purchase)) +
+  geom_histogram(binwidth = 0.25) +
+  facet_grid(rows = vars(has_churned))
+  
+```
+
+-   Redraw the plot with `time_since_first_purchase`. That is, using `churn`, plot `time_since_first_purchase` as a histogram with binwidth `0.25` faceted in a grid with `has_churned` on each row.
+
+```{r}
+ggplot(data = churn, aes(x = time_since_first_purchase)) +
+  geom_histogram(binwidth = 0.25) +
+  facet_grid(rows = vars(has_churned))
+```
+
+-   In the `time_since_the_last_purchase` plot, the distribution of churned customers was further right than the distribution of churned customers (churners typically has longer since their last purchase).
+
+-   For `time_since_first_purchase` the opposite is true: churners have a shorter length relationship.
+
+# Predictions and odds ratio
+
+# Quantifying logistic regression fit

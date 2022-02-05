@@ -526,13 +526,13 @@ Guess which observations you think will have a high leverage, then move the slid
 
 Which statement is true?
 
-a) Observations with a large distance to the nearest MRT station have the highest leverage, because these points are furthest away from the linear regression trend line.
+a)  Observations with a large distance to the nearest MRT station have the highest leverage, because these points are furthest away from the linear regression trend line.
 
-b) Observations with a large distance to the nearest MRT station have the highest leverage, because leverage is proportional to the explanatory variable.
+b)  Observations with a large distance to the nearest MRT station have the highest leverage, because leverage is proportional to the explanatory variable.
 
 **c) Observations with a large distance to the nearest MRT station have the highest leverage, because most of the observations have a short distance, so long distances are more extreme.**
 
-d) Observations with a high price have the highest leverage, because most of the observations have a low price, so high prices are most extreme.
+d)  Observations with a high price have the highest leverage, because most of the observations have a low price, so high prices are most extreme.
 
 #### **Influence**
 
