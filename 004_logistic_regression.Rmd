@@ -130,6 +130,73 @@ ggplot(data = churn, aes(x = time_since_first_purchase)) +
 
 -   For `time_since_first_purchase` the opposite is true: churners have a shorter length relationship.
 
+### **Visualizing linear and logistic models**
+
+As with linear regressions, ggplot2 will draw model predictions for a logistic regression without you having to worry about the modeling code yourself. To see how the predictions differ for linear and logistic regressions, try drawing both trend lines side by side. Spoiler: you should see a linear (straight line) trend from the linear model, and a logistic (S-shaped) trend from the logistic model.
+
+`churn` is available and `ggplot2` is loaded.
+
+-   Using `churn` plot `has_churned` vs. `time_since_first_purchase` as a scatter plot, adding a red linear regression trend line (without a standard error ribbon).
+
+```{r}
+# Using churn plot has_churned vs. time_since_first_purchase
+ggplot(churn, aes(x = time_since_first_purchase, y = has_churned)) +
+  # Make it a scatter plot
+  geom_point() +
+  # Add an lm trend line, no std error ribbon, colored red
+  geom_smooth(method = "lm", se = FALSE, color = "red")
+```
+
+-   Update the plot by adding a second trend line from logistic regression. (No standard error ribbon again).
+
+```{r}
+# Using churn plot has_churned vs. time_since_first_purchase
+ggplot(churn, aes(x = time_since_first_purchase, y = has_churned)) +
+  # Make it a scatter plot
+  geom_point() +
+  # Add an lm trend line, no std error ribbon, colored red
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  geom_smooth(method = "glm",
+    se = FALSE,
+    method.args = list(family = binomial))
+```
+
+### **Logistic regression with glm()**
+
+Linear regression and logistic regression are special cases of a broader type of models called *generalized linear models* ("GLMs"). A linear regression makes the assumption that the residuals follow a Gaussian (normal) distribution. By contrast, a logistic regression assumes that residuals follow a binomial distribution.
+
+Here, you'll model how the length of relationship with a customer affects churn.
+
+`churn` is available.
+
+-   Fit a logistic regression of `has_churned` versus `time_since_first_purchase` using the `churn` dataset. Assign to `mdl_churn_vs_relationship`.
+
+```{r}
+mdl_churn_vs_relationship <- glm(has_churned ~ time_since_first_purchase, data = churn, family = binomial)
+mdl_churn_vs_relationship
+```
+
 # Predictions and odds ratio
+
+```{r}
+mdl_recency <- glm(
+  has_churned ~ time_since_last_purchase,
+  data = churn,
+  family = "binomial"
+)
+```
+
+```{r}
+explanatory_data <- tibble(
+  time_since_last_purchase = seq(-1, 6, 0.25)
+)
+```
+
+```{r}
+prediction_data <- explanatory_data %>% 
+  dplyr::mutate(
+    has_churned = predict(mdl_recency, explanatory_data, type = "response")
+  )
+```
 
 # Quantifying logistic regression fit
