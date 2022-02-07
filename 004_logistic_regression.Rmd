@@ -23,11 +23,11 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 -   When you have dichotomous variables, you can not use linear regression.
 
 ## Churn data
+
 ```{r}
 #install.packages("devtools")
 devtools::install_github("fstPackage/fst", ref = "develop")
 ```
-
 
 ```{r}
 library(fst) # to read fst format
@@ -183,7 +183,8 @@ mdl_churn_vs_relationship
 
 # Predictions and odds ratio
 
-- Model:
+-   Model:
+
 ```{r}
 mdl_recency <- glm(
   has_churned ~ time_since_last_purchase,
@@ -192,14 +193,16 @@ mdl_recency <- glm(
 )
 ```
 
-- Creating explanatory data:
+-   Creating explanatory data:
+
 ```{r}
 explanatory_data <- tibble(
   time_since_last_purchase = seq(-1, 6, 0.25)
 )
 ```
 
-- Prediction:
+-   Prediction:
+
 ```{r}
 prediction_data <- explanatory_data %>% 
   dplyr::mutate(
@@ -209,7 +212,7 @@ prediction_data <- explanatory_data %>%
 
 # Quantifying logistic regression fit
 
-## Adding  point predictions
+## Adding point predictions
 
 ```{r}
 plt_churn_vs_recency_base <- ggplot(data = churn, aes(x = time_since_last_purchase, y = has_churned)) + 
