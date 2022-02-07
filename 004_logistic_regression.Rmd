@@ -81,7 +81,7 @@ lm_plot +
 
 -   The responses follow logistic (S-shaped) curve.
 
-## Visualizing  the logistic model
+## Visualizing the logistic model
 
 ```{r}
 glm_plot <- lm_plot +
@@ -200,3 +200,136 @@ prediction_data <- explanatory_data %>%
 ```
 
 # Quantifying logistic regression fit
+
+## Adding  point predictions
+
+```{r}
+plt_churn_vs_recency_base <- ggplot(data = churn, aes(x = time_since_last_purchase, y = has_churned)) + 
+  geom_point() +
+  geom_smooth(method = "glm",
+    se = FALSE,
+    method.args = list(family = binomial))
+```
+
+```{r}
+plt_churn_vs_recency_base +
+  geom_point(
+    data = prediction_data,
+    color = "blue"
+  )
+```
+
+## Getting the most likely outcome
+
+```{r}
+prediction_data <- explanatory_data %>% 
+  dplyr::mutate(
+    has_churned = predict(mdl_recency, explanatory_data,
+                          type = "response"),
+    most_likely_outcome = round(has_churned)
+  )
+```
+
+```{r}
+plt_churn_vs_recency_base +
+  geom_point(
+    aes(y = most_likely_outcome),
+    data = prediction_data,
+    color = "green"
+  )
+```
+
+-   For the most recently customers the most likely outcome is that they don't churn. Otherwise, the most likely outcome is that they will churn.
+
+## Odds Ratios
+
+-   *Odds ratio (OR)* é a probabilidade de que algo aconteça, dividido pela probabilidade de não acontecer.
+
+$$
+\text{OR} = \dfrac{\text{probabilidade}}{1 - \text{probabilidade}}
+$$
+
+## Calculando o *odds ratio*
+
+```{r}
+prediction_data <- explanatory_data %>% 
+  dplyr::mutate(
+    has_churned = predict(mdl_recency, explanatory_data, type = "response"),
+    most_likely_response = round(has_churned),
+    odds_ratio = has_churned / (1 - has_churned)
+  )
+```
+
+## Visualizando odds ratio
+
+```{r}
+ggplot(
+  prediction_data,
+  aes(time_since_last_purchase, odds_ratio)
+) +
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dotted")
+```
+
+-   A linha pontilhada mostra OR = 1, que significa que a chance de churn é igual a de não-churn.
+
+-   Na parte inferior esquerda, temos que OR \< 1, que significa que a chance de churn é menor do que de não-churn.
+
+-   Na parte superior direita, a chance de churn é cerca de 5 vezes maior que não-churn.
+
+## Exercícios
+
+### **Probabilities**
+
+There are four main ways of expressing the prediction from a logistic regression model -- we'll look at each of them over the next four exercises. Firstly, since the response variable is either "yes" or "no", you can make a prediction of the probability of a "yes". Here, you'll calculate and visualize these probabilities.
+
+Three variables are available:
+
+-   `mdl_churn_vs_relationship` is the logistic regression model of `has_churned` versus `time_since_first_purchase`.
+
+-   `explanatory_data` is a data frame of explanatory values.
+
+-   `plt_churn_vs_relationship` is a scatter plot of `has_churned` versus `time_since_first_purchase` with a smooth glm line.
+
+`dplyr` is loaded.
+
+##### 
+
+-   Use the model, `mdl_churn_vs_relationship`, and the explanatory data, `explanatory_data`, to predict the probability of churning. Assign the predictions to the `has_churned` column of a data frame, `prediction_data`. *Remember to set the prediction* `type`.
+
+```{r}
+# Modelo
+mdl_churn_vs_relationship <- glm(has_churned ~ time_since_first_purchase, data = churn, family = binomial)
+
+# Dados exploratórios - para fazer predição
+explanatory_data <- tibble(
+  time_since_first_purchase = c(-1.50, -1.25, -1.00, -0.75, -0.50, -0.25,  0.00,  0.25,  0.50,  0.75,  1.00,  1.25, 1.50,  1.75,  2.00,  2.25,  2.50,  2.75,  3.00,  3.25,  3.50,  3.75,  4.00))
+
+# Base de dados com Predição
+prediction_data <- explanatory_data %>% 
+  dplyr::mutate(
+    has_churned = predict(mdl_churn_vs_relationship, explanatory_data, type = "response"))
+```
+
+-   Update the `plt_churn_vs_relationship` plot to add points from `prediction_data`, colored yellow.
+
+```{r}
+plt_churn_vs_relationship <- ggplot(data = churn, aes(x = time_since_first_purchase, y = has_churned)) +
+  geom_point() +
+  geom_smooth(method = "glm", se = FALSE, method.args = list(family = binomial))
+plt_churn_vs_relationship
+```
+
+```{r}
+# Update the plot
+plt_churn_vs_relationship +
+  # Add points from prediction_data, colored yellow, size 2
+  geom_point(
+    shape = 21,
+    data = prediction_data,
+    aes(y = has_churned),
+    color = "white",
+    fill = "yellow",
+    stroke = 1.5
+  )
+```
